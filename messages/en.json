@@ -434,6 +434,8 @@
     "title": "Studies",
     "empty": "No degree programs yet. Create your first one!",
     "newProgram": "Create degree program",
+    "kaoyanTemplate": "2028 考研 template",
+    "kaoyanError": "Could not open the 2028 考研 program. Please try again.",
     "editProgram": "Edit degree program",
     "program": {
       "name": "Name",
