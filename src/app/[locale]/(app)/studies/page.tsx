@@ -7,6 +7,7 @@ import { degreeProgram } from "@/db/schema"
 import { requireSession } from "@/lib/auth/session"
 import { earnedEcts, formatGrade, programAverage } from "@/lib/grades"
 import { Link } from "@/i18n/navigation"
+import { KaoyanTemplateButton } from "@/components/studies/kaoyan-template-button"
 import { ProgramDialog } from "@/components/studies/program-dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -31,9 +32,12 @@ export default async function StudiesPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-heading text-xl font-semibold tracking-tight">{t("title")}</h1>
-        <ProgramDialog />
+        <div className="flex flex-wrap items-center gap-2">
+          <KaoyanTemplateButton />
+          <ProgramDialog />
+        </div>
       </div>
 
       {programs.length === 0 ? (

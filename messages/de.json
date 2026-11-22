@@ -434,6 +434,8 @@
     "title": "Studium",
     "empty": "Noch keine Studiengänge. Lege deinen ersten an!",
     "newProgram": "Studiengang anlegen",
+    "kaoyanTemplate": "Vorlage 2028 考研",
+    "kaoyanError": "Das Programm 2028 考研 konnte nicht geöffnet werden. Bitte versuche es erneut.",
     "editProgram": "Studiengang bearbeiten",
     "program": {
       "name": "Name",

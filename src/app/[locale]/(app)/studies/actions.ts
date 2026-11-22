@@ -4,17 +4,14 @@ import { revalidatePath } from "next/cache"
 import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { db } from "@/db"
-import {
-  degreeProgram,
-  externalResource,
-  moduleGoal,
-  semester,
-  studyModule,
-} from "@/db/schema"
+import { degreeProgram, externalResource, semester, studyModule } from "@/db/schema"
 import { requireSession } from "@/lib/auth/session"
 import { encrypt } from "@/lib/crypto"
 import { ownModule, ownProgram, ownSemester } from "@/lib/studies/access"
+import { insertModuleWithGoals } from "@/lib/studies/create-module"
+import { createKaoyanProgram } from "@/lib/studies/kaoyan-template"
 import { sweepModuleFiles, sweepProgramFiles, sweepSemesterFiles } from "@/lib/studies/orphan-cleanup"
+import { setActiveContext } from "../context-actions"
 
 // ---- Degree programs -------------------------------------------------------
 
@@ -71,6 +68,13 @@ export async function createProgram(input: unknown) {
     .returning({ id: degreeProgram.id })
   revalidatePath("/studies")
   return { ok: true as const, id: created!.id }
+}
+
+export async function openKaoyanProgram() {
+  const session = await requireSession()
+  const result = await createKaoyanProgram(session.user.id)
+  await setActiveContext({ programId: result.programId })
+  return result
 }
 
 export async function updateProgram(programId: string, input: unknown) {
@@ -179,23 +183,7 @@ export async function createModule(semesterId: string, input: unknown) {
   // Module insert + goal seeding must be atomic: a module with no goals breaks
   // grade/tab derivation, so a failed goal insert must roll back the module too.
   const types = data.goalTypes?.length ? [...new Set(data.goalTypes)] : ["exam" as const]
-  await db.transaction(async (tx) => {
-    // insert().returning() yields exactly one row unless it throws.
-    const [created] = await tx
-      .insert(studyModule)
-      .values({ ...moduleValues(data), semesterId })
-      .returning({ id: studyModule.id })
-    // Seed one goal per selected type (deduped); modules created without a
-    // selection keep a single default exam goal so they are immediately gradable.
-    await tx.insert(moduleGoal).values(
-      types.map((type, i) => ({
-        moduleId: created!.id,
-        type,
-        gradingRole: "grade" as const,
-        sortOrder: i,
-      }))
-    )
-  })
+  await db.transaction((tx) => insertModuleWithGoals(tx, { ...moduleValues(data), semesterId }, types))
   revalidatePath(`/studies/${sem.programId}`)
   return { ok: true as const }
 }
